@@ -14,6 +14,7 @@ Objectif principal : **réduire le bruit sans rater les informations critiques**
 - Changement de date/heure d'examen, rendu, réunion.
 - Mention directe d'une action demandée (« peux-tu envoyer... », « il faut valider... »).
 - Message à impact élevé (problème technique bloquant, incident, annulation).
+- Message suscitant beaucoup de réactions (likes, emojis, réponses) : signal social de pertinence, exploitable en premier temps comme heuristique simple (*quid* des plaisantiers (blagues, memes) virales ?).
 
 ## 3) Définition « message critique »
 
@@ -23,49 +24,64 @@ Un message est « critique » s'il satisfait au moins un des critères :
 - **Impact élevé** : conséquences importantes si non lu.
 - **Action explicite** : demande claire adressée au destinataire/groupe.
 - **Contexte prioritaire** : émetteur ou canal à forte priorité.
+- **Engagement social** (v1) : nombre élevé de réactions ou de réponses par rapport au fil habituel du canal.
 
 La définition exacte sera formalisée dans un guide d'annotation.
 
-## 4) Stack IA recommandée (MVP → avancé)
+## 4) Stack technique : OpenClaw
 
-### MVP (robuste et rapide)
+**OpenClaw** ([openclaw.ai](https://openclaw.ai/)) est le socle retenu pour Crible : assistant IA personnel open source, auto-hébergé, avec intégrations natives aux messageries (Discord, WhatsApp, Telegram, Slack, Signal, iMessage).
 
-- **Classification binaire** (`critique` vs `non critique`) avec un modèle type CamemBERT/FlauBERT.
-- Features de contexte : auteur, canal, heure, présence de mots d'urgence, mentions.
-- Calibration de seuil pour favoriser le rappel (ne pas rater les vrais critiques).
+### Pourquoi OpenClaw pour ce projet
 
-### Évolution
+- **Connexion aux flux** : ingestion et gestion des messages déjà prises en charge (sessions, debounce, historique de groupe).
+- **Raisonnement contextuel** : l'agent exploite le fil de conversation, l'émetteur et le canal pour juger la pertinence d'un message.
+- **Skills extensibles** : possibilité d'ajouter un skill « Crible » (règles, outils, prompts) dédié à la détection de criticité.
+- **Notifications ciblées** : alertes via le canal de l'utilisateur (Telegram, Discord, etc.) sans réveiller tout le groupe muet.
+- **Mémoire et feedback** : persistance du contexte et boucle « utile / pas utile » pour affiner le comportement.
 
-- Classification multi-classes (`urgence`, `deadline`, `action`, `incident`, etc.).
-- Reranking par modèle plus lourd (cross-encoder/LLM) sur les top candidats.
-- Boucle de feedback utilisateur (corriger « utile/pas utile ») pour adaptation continue.
+### Rôle de Crible dans OpenClaw
 
-### À propos d'OpenClaw
+Crible n'est pas un second bot parallèle : c'est la **couche de filtrage intelligent** branchée sur OpenClaw :
 
-OpenClaw (https://openclaw.ai/) peut être exploré comme piste expérimentale, mais il faut d'abord vérifier :
+1. Messages entrants sur canaux/groups en sourdine → OpenClaw les reçoit.
+2. Le skill Crible évalue la criticité (prompt + règles, puis affinage).
+3. Si critique → notification dédiée ; sinon → silence (`NO_REPLY` / pas d'alerte).
 
-- maturité écosystème,
-- coût d'inférence,
-- facilité d'intégration locale/cloud,
-- performance comparée à des baselines simples.
+Documentation utile : [Messages](https://documentation.openclaw.ai/concepts/messages), [Agent](https://documentation.openclaw.ai/cli/agent), [Configuration](https://documentation.openclaw.ai/gateway/configuration).
 
-La recommandation est de **benchmarker OpenClaw contre 2 baselines solides** avant décision finale.
+### Compléments NLP (évaluation académique)
+
+Pour le mémoire et la comparaison scientifique, conserver des **baselines classiques** en parallèle (sans remplacer OpenClaw) :
+
+- heuristiques + mots-clés + seuil d'engagement (réactions/réponses) ;
+- TF-IDF + régression logistique ;
+- CamemBERT/FlauBERT fine-tuné sur corpus annoté.
+
+Ces modèles servent à mesurer précision/rappel/F1 sur jeu de test ; OpenClaw reste le prototype opérationnel.
+
+### Évolution prévue
+
+- v0 : skill OpenClaw + définition de criticité dans le prompt système.
+- v1 : skill dédié avec seuils, liste d'émetteurs/canaux prioritaires, types (`urgence`, `deadline`, `action`).
+- v2 : pré-filtre léger (classifieur) + décision finale OpenClaw sur les candidats ; active learning via feedback.
 
 ## 5) Architecture fonctionnelle
 
-1. **Ingestion** des messages (API/exports/connecteurs).
-2. **Pré-traitement** (nettoyage, langue, segmentation, déduplication).
-3. **Inférence** du score de criticité.
-4. **Filtrage + seuil adaptatif** selon profil utilisateur.
-5. **Notification** (push, email, webhook, bot Discord).
-6. **Journalisation + feedback** pour amélioration continue.
+1. **Ingestion** via OpenClaw (canaux Discord, WhatsApp, etc.).
+2. **Contexte** : session, historique de groupe, métadonnées émetteur/canal.
+3. **Skill Crible** : évaluation criticité (LLM + règles configurables).
+4. **Filtrage** : seuil adaptatif, priorités par canal/émetteur.
+5. **Notification** : alerte utilisateur sur canal choisi (sans spammer le groupe muet).
+6. **Journalisation + feedback** pour amélioration continue et évaluation.
 
-## 6) Roadmap (12 semaines, équipe de 2)
+## 6) Proposition de roadmap (12 semaines, équipe de 2)
 
-### Phase 0 - Cadrage (S1)
+### Phase 0 : cadrage (S1)
 
 - Formaliser problèmes, objectifs, contraintes (RGPD, ToS plateformes).
 - Définir la taxonomie « critique ».
+- Installer et configurer OpenClaw (canal pilote : Discord ou WhatsApp).
 - Écrire le protocole d'évaluation.
 
 **Livrables**
@@ -74,7 +90,7 @@ La recommandation est de **benchmarker OpenClaw contre 2 baselines solides** ava
 - Guide d'annotation v1.
 - Métriques cibles (précision, rappel, F1, taux d'alertes utiles).
 
-### Phase 1 - Données (S2–S3)
+### Phase 1 : données (S2–S3)
 
 - Constituer un jeu de données (historique anonymisé + données synthétiques).
 - Annoter un premier corpus (minimum viable : 2k–5k messages).
@@ -85,40 +101,41 @@ La recommandation est de **benchmarker OpenClaw contre 2 baselines solides** ava
 - Dataset versionné (`train/val/test`).
 - Rapport qualité annotations (kappa ou accord simple).
 
-### Phase 2 - Baselines ML/NLP (S4–S5)
+### Phase 2 : skill Crible sur OpenClaw (S4–S5)
 
-- Baseline 1 : règles + mots-clés + score heuristique.
-- Baseline 2 : classifieur léger (TF-IDF + Logistic Regression).
-- Baseline 3 : transformeur fine-tuné (CamemBERT/FlauBERT).
+- Premier skill : prompt système + critères de criticité.
+- Tests sur flux réel ou export simulé (groupes muets).
+- Réglage silence vs notification (`NO_REPLY`, canal d'alerte dédié).
 
 **Livrables**
 
-- Tableau comparatif métriques + latence.
-- Choix du modèle MVP justifié.
+- Skill Crible v0 fonctionnel.
+- Jeu d'exemples annotés pour calibrer le comportement.
 
-### Phase 3 - Prototype bout-en-bout (S6–S7)
+### Phase 3 : baselines NLP + prototype bout-en-bout (S6–S7)
 
-- Pipeline ingestion → inférence → notification.
+- Baselines pour le mémoire : heuristiques, TF-IDF, CamemBERT/FlauBERT.
+- Pipeline OpenClaw : ingestion → skill Crible → notification.
 - Tableau de bord simple (logs, faux positifs/faux négatifs).
-- Réglage du seuil utilisateur.
 
 **Livrables**
 
 - MVP exécutable.
 - Démo sur flux réel/simulé.
 
-### Phase 4 - Améliorations IA (S8–S9)
+### Phase 4 : améliorations (S8–S9)
 
-- Test OpenClaw (ou autre modèle avancé) en reranker.
-- Ajout de contexte conversationnel (fenêtre de messages précédents).
-- Début active learning via feedback utilisateur.
+- Skill Crible v1 : types de criticité, priorités canal/émetteur.
+- Option pré-filtre classique + décision OpenClaw sur candidats.
+- Active learning via feedback « utile / pas utile ».
+- Comparaison OpenClaw vs baselines sur corpus annoté.
 
 **Livrables**
 
-- Rapport d'ablation (avec/sans contexte, avec/sans reranker).
-- Décision sur stack finale.
+- Rapport d'ablation (prompt seul vs skill structuré vs pré-filtre).
+- Métriques OpenClaw + baselines sur jeu de test.
 
-### Phase 5 - Fiabilité et évaluation finale (S10–S11)
+### Phase 5 : fiabilité et évaluation finale (S10–S11)
 
 - Stress test sur gros volumes.
 - Étude erreurs (types de messages ratés).
@@ -129,7 +146,7 @@ La recommandation est de **benchmarker OpenClaw contre 2 baselines solides** ava
 - Rapport expérimental final.
 - Recommandations de déploiement.
 
-### Phase 6 - Rendu (S12)
+### Phase 6 : rendu (S12)
 
 - Nettoyage code + documentation.
 - Slides et démo finale.
@@ -157,7 +174,8 @@ La recommandation est de **benchmarker OpenClaw contre 2 baselines solides** ava
 
 ## 9) Prochaines actions immédiates
 
-1. Valider la taxonomie de criticité (30–45 min).
-2. Définir le format de dataset et commencer l'annotation pilote (200 messages).
-3. Entraîner baseline TF-IDF + baseline CamemBERT.
-4. Fixer un objectif MVP : rappel ≥ 0,90 sur classe critique.
+1. Installer OpenClaw et connecter un canal pilote (Discord ou WhatsApp).
+2. Valider la taxonomie de criticité (30–45 min).
+3. Rédiger le prompt / skill Crible v0 et tester sur 20–30 messages réels.
+4. Lancer l'annotation pilote (200 messages) pour les baselines du mémoire.
+5. Fixer un objectif MVP : rappel ≥ 0,90 sur messages critiques (évalués manuellement).
