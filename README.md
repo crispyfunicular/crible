@@ -37,7 +37,7 @@ La définition exacte sera formalisée dans un guide d'annotation.
 - **Connexion aux flux** : ingestion et gestion des messages déjà prises en charge (sessions, debounce, historique de groupe).
 - **Raisonnement contextuel** : l'agent exploite le fil de conversation, l'émetteur et le canal pour juger la pertinence d'un message.
 - **Skills extensibles** : possibilité d'ajouter un skill « Crible » (règles, outils, prompts) dédié à la détection de criticité.
-- **Notifications ciblées** : alertes via le canal de l'utilisateur (Telegram, Discord, etc.) sans réveiller tout le groupe muet.
+- **Notifications ciblées** : alertes via le canal de l'utilisateurice (Telegram, Discord, etc.) sans réveiller tout le groupe muet.
 - **Mémoire et feedback** : persistance du contexte et boucle « utile / pas utile » pour affiner le comportement.
 
 ### Rôle de Crible dans OpenClaw
@@ -72,7 +72,7 @@ Ces modèles servent à mesurer précision/rappel/F1 sur jeu de test ; OpenClaw 
 2. **Contexte** : session, historique de groupe, métadonnées émetteur/canal.
 3. **Skill Crible** : évaluation criticité (LLM + règles configurables).
 4. **Filtrage** : seuil adaptatif, priorités par canal/émetteur.
-5. **Notification** : alerte utilisateur sur canal choisi (sans spammer le groupe muet).
+5. **Notification** : alerte utilisateurice sur canal choisi (sans spammer le groupe muet).
 6. **Journalisation + feedback** pour amélioration continue et évaluation.
 
 ## 6) Proposition de roadmap (12 semaines, équipe de 2)
@@ -94,7 +94,7 @@ Ces modèles servent à mesurer précision/rappel/F1 sur jeu de test ; OpenClaw 
 
 - Constituer un jeu de données (historique anonymisé + données synthétiques).
 - Annoter un premier corpus (minimum viable : 2k–5k messages).
-- Mesurer accord inter-annotateurs (vous 2).
+- Mesurer accord inter-annotateurices (vous 2).
 
 **Livrables**
 
@@ -170,12 +170,38 @@ Ces modèles servent à mesurer précision/rappel/F1 sur jeu de test ; OpenClaw 
 - **Données sensibles** → anonymisation stricte + minimisation des logs.
 - **Label noise** → guide annotation + revues croisées.
 - **Dérive de domaine** (Discord ≠ WhatsApp) → évaluation multi-domaines.
-- **Trop de faux positifs** → seuil adaptatif + feedback utilisateur.
+- **Trop de faux positifs** → seuil adaptatif + feedback utilisateurice.
 
-## 9) Prochaines actions immédiates
+## 9) Structure du dépôt
 
-1. Installer OpenClaw et connecter un canal pilote (Discord ou WhatsApp).
-2. Valider la taxonomie de criticité (30–45 min).
-3. Rédiger le prompt / skill Crible v0 et tester sur 20–30 messages réels.
-4. Lancer l'annotation pilote (200 messages) pour les baselines du mémoire.
+```
+crible/
+├── docs/
+│   ├── annotation_guide.md   # Règles d'annotation (κ pilote)
+│   └── setup_openclaw.md     # Installation OpenClaw + skill
+├── data/
+│   ├── pilot_sample.csv      # Échantillon pilote (template)
+│   └── raw/                  # Exports bruts (gitignored)
+├── skills/crible/SKILL.md    # Skill OpenClaw
+├── src/crible/               # Code Python (heuristiques, métriques)
+├── scripts/
+│   ├── run_baseline.py       # Éval baseline heuristique
+│   └── run_anonymize.py      # Anonymisation RGPD
+├── eval_protocol.md          # Protocole d'évaluation (PengCHEN)
+└── experiment_logs.md        # Résultats des runs
+```
+
+**Démarrage rapide**
+
+```bash
+python scripts/run_baseline.py
+python scripts/run_anonymize.py -i data/raw/export.txt -o data/raw/export_anon.txt
+```
+
+## 10) Prochaines actions immédiates
+
+1. Compléter `data/pilot_sample.csv` (viser 300 messages anonymisés).
+2. Annoter en double (`label_morgane`, `label_peng`) puis fusionner `label`.
+3. Installer OpenClaw : `docs/setup_openclaw.md` + copier `skills/crible/`.
+4. Lancer `run_baseline.py` et noter les scores dans `experiment_logs.md`.
 5. Fixer un objectif MVP : rappel ≥ 0,90 sur messages critiques (évalués manuellement).
