@@ -1,0 +1,12 @@
+# Crible — dépendances Python (baselines & évaluation)
+# Installer : pip install -r requirements.txt
+
+# Pas de dépendance externe obligatoire pour la baseline heuristique v0
+# (stdlib uniquement : csv, re, argparse, dataclasses)
+
+# --- À ajouter plus tard (Phase 2–3 du protocole) ---
+# scikit-learn>=1.4.0      # TF-IDF + régression logistique
+# transformers>=4.40.0     # CamemBERT / FlauBERT
+# torch>=2.2.0
+# pandas>=2.2.0
+# numpy>=1.26.0

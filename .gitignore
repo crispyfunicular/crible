@@ -1,2 +1,10 @@
+# environnements virtuels
 venv/
-data/
+.env
+
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Exports bruts non anonymisés (ne jamais committer)
+data/raw/
