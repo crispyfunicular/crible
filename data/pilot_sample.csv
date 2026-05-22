@@ -1,0 +1,9 @@
+id,texte,canal,timestamp,nb_reactions,nb_replies,label,sous_labels,label_morgane,label_peng,notes
+1,"Le partiel INFO est reporté au 22/06 à 14h en amphi B.",discord#groupe-tal,2026-05-10T09:15:00,3,8,1,deadline|impact,,,Exemple A du guide — CRITIQUE
+2,"😂😂😂",discord#groupe-tal,2026-05-10T10:02:00,40,2,0,,,,Exemple B — meme viral NON_CRITIQUE
+3,"@tous Merci d'envoyer votre choix de sujet avant vendredi 18h.",discord#groupe-tal,2026-05-11T14:30:00,1,4,1,deadline|action,,,Exemple C — action + deadline
+4,"La séance de demain est annulée.",whatsapp#promo,2026-05-12T08:00:00,25,12,1,impact|social_engagement,,,Exemple D — impact + engagement
+5,"Qui a vu le dernier épisode ?",discord#groupe-tal,2026-05-12T21:00:00,60,15,0,,,,Exemple E — engagement sans info utile
+6,"",discord#groupe-tal,,0,0,,,,,À compléter — exporter depuis votre canal pilote
+7,"",discord#groupe-tal,,0,0,,,,,À compléter
+8,"",discord#groupe-tal,,0,0,,,,,À compléter
